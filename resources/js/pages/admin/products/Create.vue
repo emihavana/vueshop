@@ -10,6 +10,10 @@ defineOptions({
         ],
     },
 });
+
+defineProps<{
+    categories: { id: number; name: string }[];
+}>();
 </script>
 
 <template>
@@ -17,6 +21,6 @@ defineOptions({
 
     <div class="p-6">
         <h1 class="mb-6 text-2xl font-bold">New product</h1>
-        <ProductForm />
+        <ProductForm :categories="categories" />
     </div>
 </template>

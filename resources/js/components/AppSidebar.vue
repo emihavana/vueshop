@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { Boxes, LayoutGrid, Package, Receipt, ShoppingCart, Tags } from '@lucide/vue';
+import { computed, onUnmounted } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -13,30 +14,35 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
+const page = usePage();
 
-const footerNavItems: NavItem[] = [
-    // {
-    //     title: 'Repository',
-    //     href: 'https://github.com/laravel/vue-starter-kit',
-    //     icon: FolderGit2,
-    // },
-    // {
-    //     title: 'Documentation',
-    //     href: 'https://laravel.com/docs/starter-kits#vue',
-    //     icon: BookOpen,
-    // },
-];
+const isAdmin = computed(() => Boolean((page.props.auth.user as { is_admin?: boolean } | null)?.is_admin));
+
+const mainNavItems = computed<NavItem[]>(() => [
+    ...(isAdmin.value ? [{ title: 'Dashboard', href: '/admin/dashboard', icon: LayoutGrid }] : []),
+    { title: 'POS', href: '/pos', icon: ShoppingCart },
+    ...(isAdmin.value
+        ? [
+              { title: 'Products', href: '/admin/products', icon: Package },
+              { title: 'Categories', href: '/admin/categories', icon: Tags },
+              { title: 'Stock', href: '/admin/stock', icon: Boxes },
+              { title: 'SalesReports', href: '/admin/sales', icon: Receipt },
+          ]
+        : []),
+]);
+
+const footerNavItems: NavItem[] = [];
+
+// ---- Close the phone menu as soon as a link is tapped ----
+const { setOpenMobile } = useSidebar();
+
+// router.on returns a function that removes the listener again
+const stopListening = router.on('start', () => setOpenMobile(false));
+onUnmounted(stopListening);
 </script>
 
 <template>
@@ -45,7 +51,7 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
+                        <Link href="/pos">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>

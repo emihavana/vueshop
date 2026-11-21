@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,6 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    // List products (10 per page)
     public function index(): Response
     {
         return Inertia::render('admin/products/Index', [
@@ -20,24 +20,24 @@ class ProductController extends Controller
         ]);
     }
 
-    // Show the empty form
     public function create(): Response
     {
-        return Inertia::render('admin/products/Create');
+        return Inertia::render('admin/products/Create', [
+            'categories' => Category::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
-    // Save a new product
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'category_id' => ['nullable', 'exists:categories,id'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
-            'image' => ['nullable', 'image', 'max:2048'],   // max 2MB
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('image')) {
-            // Saves the file in storage/app/public/products and returns "products/abc123.jpg"
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
@@ -46,32 +46,31 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index');
     }
 
-    // Show the form filled with an existing product
     public function edit(Product $product): Response
     {
         return Inertia::render('admin/products/Edit', [
             'product' => $product,
+            'categories' => Category::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
-    // Save changes to an existing product
     public function update(Request $request, Product $product): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'category_id' => ['nullable', 'exists:categories,id'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('image')) {
-            // Remove the old uploaded file (the exists() check protects your old public/images files)
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
             $data['image'] = $request->file('image')->store('products', 'public');
         } else {
-            unset($data['image']);   // no new file: keep the current image
+            unset($data['image']);
         }
 
         $product->update($data);
@@ -79,7 +78,6 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index');
     }
 
-    // Delete a product
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->image && Storage::disk('public')->exists($product->image)) {

@@ -1,16 +1,9 @@
 <script setup lang="ts">
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import type { BreadcrumbItem } from '@/types';
+import { Menu, PanelLeft } from '@lucide/vue';
+import { useSidebar } from '@/components/ui/sidebar';
 
-withDefaults(
-    defineProps<{
-        breadcrumbs?: BreadcrumbItem[];
-    }>(),
-    {
-        breadcrumbs: () => [],
-    },
-);
+const { toggleSidebar } = useSidebar();
+
 </script>
 
 <template>
@@ -18,10 +11,16 @@ withDefaults(
         class="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/70 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4"
     >
         <div class="flex items-center gap-2">
-            <SidebarTrigger class="-ml-1" />
-            <template v-if="breadcrumbs && breadcrumbs.length > 0">
-                <Breadcrumbs :breadcrumbs="breadcrumbs" />
-            </template>
+        
+            <button
+    type="button"
+    class="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent"
+    aria-label="Toggle menu"
+    @click="toggleSidebar"
+>
+    <Menu class="h-5 w-5 md:hidden" />
+    <PanelLeft class="hidden h-4 w-4 md:block" />
+</button>
         </div>
     </header>
 </template>
